@@ -32,7 +32,55 @@ RSpec.describe PathVisitDatastore do
         expect(subject.visited_paths).to include [path, ip_address]
       end
 
-      context "with a path and IP combinsation that's already logged" do
+      context "with a path and IP combination that's already logged" do
+        let(:path) { '/about/2' }
+        let(:ip_address) { '836.973.694.403' }
+        let(:log_line) { LogLine.new(line_contents: "#{path} #{ip_address}") }
+
+        context 'with an IP address that has already visited the path' do
+          let(:duplicate_log_line) { LogLine.new(line_contents: "#{path} #{ip_address}") }
+
+          it 'increments the visit count for the path' do
+            subject.update_path_visit_quantities(log_line: log_line)
+            subject.update_path_visit_quantities(log_line: duplicate_log_line)
+
+            path_visit_data = subject.path_visits[path.to_sym]
+
+            expect(path_visit_data.visit_count).to eq 2
+          end
+
+          it 'does not increment the unique visit count for the path' do
+            subject.update_path_visit_quantities(log_line: log_line)
+            subject.update_path_visit_quantities(log_line: duplicate_log_line)
+
+            path_visit_data = subject.path_visits[path.to_sym]
+
+            expect(path_visit_data.unique_visit_count).to eq 1
+          end
+        end
+
+        context 'with a unique IP address' do
+          let(:unique_log_line) { LogLine.new(line_contents: "#{path} '123.456.789.000'") }
+
+          it 'increments the visit count for the path' do
+            subject.update_path_visit_quantities(log_line: log_line)
+            subject.update_path_visit_quantities(log_line: unique_log_line)
+
+            path_visit_data = subject.path_visits[path.to_sym]
+
+            expect(path_visit_data.visit_count).to eq 2
+          end
+
+          it 'increments the unique visit count for the path' do
+            subject.update_path_visit_quantities(log_line: log_line)
+            subject.update_path_visit_quantities(log_line: unique_log_line)
+
+            path_visit_data = subject.path_visits[path.to_sym]
+
+            expect(path_visit_data.unique_visit_count).to eq 2
+          end
+        end
+
         it 'does not store an additional entry' do
           subject.update_path_visit_quantities(log_line: valid_log_line)
           subject.update_path_visit_quantities(log_line: valid_log_line)

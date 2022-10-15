@@ -15,8 +15,11 @@ class PathVisitDatastore
   def update_path_visit_quantities(log_line:)
     raise(InvalidLogLineError, "Invalid log line") unless log_line.is_a? LogLine
 
-    store_unique_log_entry(log_line)
-    @path_visits.update(initial_entry(log_line))
+    is_unique_visit = !store_unique_log_entry(log_line).nil?
+
+    @path_visits.update(initial_entry(log_line)) do |key, path_visit_data|
+      path_visit_data.increment_stats(is_unique_visit: is_unique_visit)
+    end
   end
 
   private
