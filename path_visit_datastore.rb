@@ -12,6 +12,14 @@ class PathVisitDatastore
     @visited_paths = Set.new
   end
 
+  def paths_by_visit_count
+    @path_visits.sort_by { |key, value| -value.visit_count }
+  end
+
+  def paths_by_unique_visit_count
+    @path_visits.sort_by { |key, value| -value.unique_visit_count }
+  end
+
   def update_path_visit_quantities(log_line:)
     raise(InvalidLogLineError, "Invalid log line") unless log_line.is_a? LogLine
 
