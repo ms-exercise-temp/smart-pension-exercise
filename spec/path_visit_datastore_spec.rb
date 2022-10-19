@@ -14,7 +14,8 @@ RSpec.describe PathVisitDatastore do
   context '#update_path_visit_quantities' do
     context 'with a valid log line' do
       let(:path) { '/about/2' }
-      let(:valid_log_line) { LogLine.new(line_contents: "#{path} 836.973.694.403") }
+      let(:ip_address) { '836.973.694.403' }
+      let(:valid_log_line) { LogLine.new(line_contents: "#{path} #{ip_address}") }
 
       it 'stores an initial entry for the path' do
         subject.update_path_visit_quantities(log_line: valid_log_line)
@@ -23,6 +24,21 @@ RSpec.describe PathVisitDatastore do
 
         expect(path_visit_data.visit_count).to eq 1
         expect(path_visit_data.unique_visit_count).to eq 1
+      end
+
+      it 'stores an entry for the log line' do
+        subject.update_path_visit_quantities(log_line: valid_log_line)
+
+        expect(subject.visited_paths).to include [path, ip_address]
+      end
+
+      context "with a path and IP combinsation that's already logged" do
+        it 'does not store an additional entry' do
+          subject.update_path_visit_quantities(log_line: valid_log_line)
+          subject.update_path_visit_quantities(log_line: valid_log_line)
+
+          expect(subject.visited_paths.size).to eq 1
+        end
       end
     end
 
